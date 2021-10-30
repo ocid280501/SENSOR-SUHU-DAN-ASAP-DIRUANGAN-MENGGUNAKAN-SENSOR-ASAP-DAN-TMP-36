@@ -1,0 +1,71 @@
+#include <LiquidCrystal.h>
+//menggunakan kode kode untuk lcd16x2
+
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2);//menyatakan pin digital yang terhubung (RS, E, DB4, DB5, DB6, DB7)
+int smokesensorPin = A0; //sensor asap pin A0
+int tempsensorPin = A1; //sensor suhu pin A1
+int buzzer = 11; //Buzzer -> digital 11
+int LEDR = 10; //LED Merah -> digital 10
+int LEDG = 8; //LED Hijau -> digital 8
+int LEDB = 9; //LED Biru -> digital 9
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(smokesensorPin, INPUT); //sensor asap sebagai INPUT
+  pinMode(tempsensorPin, INPUT); //sensor suhu sebagai INPUT
+  pinMode(LEDR, OUTPUT); //LED Merah sebagai OUTPUT
+  pinMode(LEDB, OUTPUT); //LED Biru sebagai OUTPUT
+  pinMode(LEDG, OUTPUT); //LED Hijau sebagai OUTPUT
+  lcd.begin(16, 2); //layar lcd berukuran 16 kolom dan 2 baris
+}
+
+void loop()                     
+{ 
+
+int reading = analogRead(tempsensorPin); //besarnya reading adalah dari analogRead tempsensorPin atau A1) 
+float voltage = reading * 5.0; //besarnya voltage sama dengan reading dikali 5.0
+voltage /= 1024.0; //nilai voltage dibagi 1024
+float suhu = (voltage - 0.5) * 100 ; //suhu sama dengan voltage dikurang 0.5 dan dikali 100(temperatureC merupakan hasil pengukuran suhu dalam derajat celcius)
+lcd.setCursor(0,0); //mulai menulis lcd dari kolom 1 baris 1
+lcd.print(suhu); //menulis besarnya suhu pada lcd
+lcd.print(" Degree C"); //menulis " Degree C" pada lcd
+int smokesensorValue = analogRead(smokesensorPin); //besarnya smokesensorValue didapat dari analogRead smokesensorPin atau A0
+Serial.print("Suhu Ruangan: "); //menulis "Suhu Ruangan: " pada serial monitor
+Serial.print(suhu); //menulis besarnya nilai (suhu) pada serial monitor
+Serial.println(" Degree C"); //menulis " Degree C" pada serial monitor diakhiri dengan pergantian baris
+Serial.print("Smoke Detected :"); //menulis "Smoke Detected :" pada serial monitor
+Serial.println(smokesensorValue); //menulis bersarnya smokesensorValue pada serial monitor
+
+if(smokesensorValue >= 450 && suhu >= 70){ //jika gas terdeteksi>=450 dan suhu>=70 derajat celcius
+    lcd.setCursor(0,1); //mulai menulis lcd pada kolom 1 baris 2
+    lcd.print("FIRE ALERT     "); //menulis "FIRE ALERT     " pada lcd
+    tone(buzzer, 1000,200); //buzzer berbunyi, frekuensi 1000, selama 200 milisecond
+    analogWrite(LEDR, 255); //LEDR besar nya 225
+  	analogWrite(LEDG, 0); //LEDG besar nya 0
+    analogWrite(LEDB, 0); //LEDB besar nya 0
+  }
+if(smokesensorValue >= 450 && suhu < 70){ //jika gas terdeteksi>=450 dan suhu<70 derajat celcius
+    lcd.setCursor(0,1); //mulai menulis lcd pada kolom 1 baris 2
+    lcd.print("SMOKE DETECTED  "); //menulis "SMOKE DETECTED  " pada lcd
+    tone(buzzer, 200,200); ////buzzer berbunyi, frekuensi 200, selama 200 milisecond
+    analogWrite(LEDR, 225); //LEDR besar nya 225
+  	analogWrite(LEDG, 225); //LEDG besar nya 225
+    analogWrite(LEDB, 0); //LEDB besar nya 0
+  }
+if(smokesensorValue < 450 && suhu <70){ //jika gas terdeteksi<450 dan suhu<70 derajat celcius
+    lcd.setCursor(0,1); //mulai menulis lcd pada kolom 1 baris 2
+    lcd.print("NO SMOKE        "); //menulis "NO SMOKE        " pada lcd
+    analogWrite(LEDR, 0); //LEDR besar nya 0
+  	analogWrite(LEDG, 225); //LEDR besar nya 225
+    analogWrite(LEDB, 0); //LEDR besar nya 0
+  }
+if(smokesensorValue < 450 && suhu >=70){ //jika gas terdeteksi<450 dan suhu>=70 derajat celcius
+    lcd.setCursor(0,1); //mulai menulis lcd pada kolom 1 baris 2
+    lcd.print("NO SMOKE        "); //menulis "NO SMOKE        " pada lcd
+    analogWrite(LEDR, 225); //LEDR besar nya 225
+  	analogWrite(LEDG, 225); //LEDR besar nya 225
+    analogWrite(LEDB, 0); //LEDR besar nya 0
+  }
+delay(100); //delay selama 100 milisecond
+  
+}
